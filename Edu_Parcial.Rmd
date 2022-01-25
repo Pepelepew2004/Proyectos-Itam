@@ -1,0 +1,493 @@
+---
+title: "Edu_Parcial 1"
+author: "José Eduardo Téllez"
+date: "12/3/2021"
+output: 
+    rmdformats::readthedown:
+    theme: bookdown 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Paqueterias
+
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(viridis)
+library(plotly)
+library("lattice")
+```
+
+## Importar los Datos
+
+```{r}
+data <- read.csv2("Base4.P1.csv", header = T,  sep = ";")
+                          
+data<- data[,2:8]
+names(data)<- c("Sex","Sport","Height","Weight","RBC","BMI","HGB")
+
+data <- data %>% mutate(Sex=as.factor(Sex))
+data <- data %>% mutate(Sport=as.factor(Sport))
+```
+
+Importamos los datos usando la función read.csv2 para que nos trajera los datos como númericos y no como alpha númericos; ocupamos de separación ";". De igual manera definimos nuestros propios nombres para tener mejor manejo de las variables. De una vez convertimos las varibales Sex y Sport a Factor para poder estudiarlas más adeltantes.
+
+## Clases de los Datos
+
+```{r}
+class.data <- c()
+
+for (i in 1:length(data[1,])) {
+  class.data[i] <- class(data[,i])
+  
+}
+data.frame.class <- data.frame(names(data),class.data)
+data.frame.class
+
+```
+
+Como vemos en la anterior trabla nuestra base cuenta con dos 7 variables, dos factor y las demás númericas.
+
+```{r}
+summary(data)
+
+```
+*  Sex solo puede tomar do valores F(femenino) o M (Masculino)
+*  Sport encontramos 7 deportes, observamos que el número de muestra por elemento es aproximadamente igual (20-30)
+*  Height toma valores entre 148.9-208.4 con una media alrededor de 180.1
+*  Weight toma valores entre 37.80 y 123.20 con una media de 75.01, vemos que existen posibles datos atípicos.
+*  RBC toma valores entre 3.8 y 6.72 con una  media de 4.719.
+*  BMI toma valores entre 16.75 y 43.42 con una  media de 22.96.
+*  HGB toma valores entre 11.60 y 19.20 con una  media de 14.57.
+
+
+## Atípicos{.tabset}
+
+### Height
+
+```{r}
+
+l1<-data %>% ggplot(mapping = aes(x="",y=Height)) +geom_boxplot(fill="#000004FF",alpha=.8) +theme_minimal()
+ggplotly(l1)
+```
+
+En la anterior gráfica vemos que Height tiene dos datos atípicos (149,209.40)
+
+### Weight
+
+```{r}
+
+l2<-data %>% ggplot(mapping = aes(x="",y=Weight)) +geom_boxplot(fill="#2D1160FF",alpha=.8) + theme_minimal()
+ ggplotly(l2)
+```
+
+Weight tiene varios datos fuera del rango (123.20,113, 111.30 y 37.80)
+
+### RBC
+
+```{r}
+l3<-data %>% ggplot(mapping = aes(x="",y=RBC)) +geom_boxplot(fill="#721F81FF",alpha=.8)+theme_minimal()
+ggplotly(l3)
+```
+
+Para RBC solo observamosque el valor 6.72 se aleja mucho de la media
+
+### BMI
+
+```{r}
+
+l4<-data %>% ggplot(mapping = aes(x="",y=BMI)) +geom_boxplot(fill="#B63679FF",alpha=.8)+theme_minimal()
+ggplotly(l4)
+```
+
+BMI tiene varios valores atípicos como se observan en la anterior gráfica
+
+### HGB
+
+```{r}
+
+l5 <-data %>% ggplot(mapping = aes(x="",y=HGB)) +geom_boxplot(fill="#F1605DFF",alpha=.8)+theme_minimal() 
+ggplotly(l5)
+```
+
+
+
+## Tabla de contingencia{.tabset}
+
+
+### Sex
+
+```{r}
+data$Sex %>% table()
+
+```
+En la anterior tabla vemos que tenemos dos hombres más que muejres, pero nuestra base está proporcionada
+
+### Sport
+
+```{r}
+
+data$Sport %>% table()
+```
+
+Para los deportes vemos que tenemos muy pocas muestras de Gimnasio, esto podría afectar nuestro analisis posterior. De igual manera vemos que tenemos más cantidad de Rowing. En las demás variables encontramos un rango porporcional.
+
+
+## Variables{.tabset}
+
+### Sex
+
+```{r}
+sex_wrap <- data %>% gather(variable,value, c(Height,Weight,RBC,BMI,HGB)) %>% 
+  ggplot(mapping = aes(x=Sex,y=value))+geom_boxplot(aes(fill=Sex), show.legend = F) +
+  facet_wrap( ~ variable, scales = "free") + theme_minimal()+scale_fill_manual(values = c("#721F81FF","#F1605DFF"))
+sex_wrap
+
+```
+
+
+Analisando las variables con respecto a Sex podemos decir que:
+
+*  En todas la variables los hombres tiene un valor d emedia mayor al de las mujeres, lo cual se puede deber a que los hombres tienen un mayor número de datos atípicos en BMI, HGB, RBC.
+*  Lás mujeres presentan una mayor variabilidad en HGB que los hombres.
+*  Lás muejeres tienen más datos atípicos en Height.
+
+
+
+### Sport
+
+```{r}
+
+
+
+sport_wrap <- data %>% gather(variable,value, c(Height,Weight,RBC,BMI,HGB)) %>% 
+  ggplot(mapping = aes(y=Sport,x=value))+geom_boxplot(aes(fill=Sport), show.legend = F) +
+  facet_wrap( ~ variable, scales = "free") + theme_minimal()+ scale_fill_viridis(discrete= T,option = "magma")
+sport_wrap
+
+```
+
+Comparando las varibales con respecto al Deporte:
+
+*  Vemos que Field se destaca en BMI con una media alrededor de 26, asímismo con un amayor varibilidad. Mientras que GYM tiene el menor BMI y la menor variabilidad, una posible razón es que tenemos solo 4 datos de GYM
+
+
+*  En Height observamos que WPPOLO tiene la mayor media aunque BBAll tiene un mayor rango de variabilidad. En este mismo caso observamos que GYM se queda al último.
+
+*  En las demas variables observamos que tienen un comportamiento muy simliar, manteniendo una media muy parecidas.
+
+
+## Mapa de calor Height{.tabset}
+
+### RBC
+
+```{r}
+d1 <-data %>% ggplot(aes(y=Height,x=RBC))+ geom_point(aes(colour=Sex),alpha=0.3) + stat_density_2d(geom = "raster",aes(fill = after_stat(density)),contour = FALSE) + 
+  scale_fill_viridis_c(option = "magma")+theme_light()+theme(axis.title.x=element_blank()) + ggtitle("RBC") +
+  scale_colour_manual(values = c("#3B0F70FF" ,"#FCFDBFFF" ))
+
+
+ggplotly(d1)
+
+```
+
+En este caso vemos que se dividen en dos campos, las mujeres tienen una Altura y RB menor que los hombres.
+
+
+### BMI
+
+```{r}
+d2 <-data %>% ggplot(aes(y=Height,x=BMI))+ geom_point(aes(colour=Sex),alpha=0.3) + stat_density_2d(geom = "raster",aes(fill = after_stat(density)),contour = FALSE) + 
+  scale_fill_viridis_c(option = "magma")+theme_light()+theme(axis.title.x=element_blank()) + ggtitle("BMI") +
+  scale_colour_manual(values = c("#3B0F70FF" ,"#FCFDBFFF" ))
+ggplotly(d2)
+
+```
+
+Vemos que los datso se concentran alredor de 20 y 25 de BMI y con una altura de 180
+
+### HGB
+
+```{r}
+d3 <-data %>% ggplot(aes(y=Height,x=HGB))+ geom_point(aes(colour=Sex),alpha=0.3) + 
+  stat_density_2d(geom = "raster",aes(fill = after_stat(density)),contour = FALSE) + 
+  scale_fill_viridis_c(option = "magma")+theme_light()+theme(axis.title.x=element_blank()) + 
+  ggtitle("HGB") +
+  scale_colour_manual(values = c("#3B0F70FF" ,"#FCFDBFFF" ))
+ggplotly(d3) 
+```
+
+con HGB vemos que se forman dos grupos; el primero son las mujeres con un HGB entre 12 y 14, mientras que los hombres con un HGB entre 14 y 17.
+
+
+
+
+## Mapa de calor Weight{.tabset}
+
+### RBC
+
+```{r}
+c1 <-data %>% ggplot(aes(y=Weight,x=RBC))+ geom_point(aes(colour=Sex),alpha=0.3) + stat_density_2d(geom = "raster",aes(fill = after_stat(density)),contour = FALSE) + 
+  scale_fill_viridis_c(option = "magma")+theme_light()+theme(axis.title.x=element_blank()) + ggtitle("RBC") +
+  scale_colour_manual(values = c("#3B0F70FF" ,"#FCFDBFFF" ))
+
+ggplotly(c1)
+
+```
+
+Vemos la misma división, los datos se concentran en dos grupos, alrededor de 4-5 y 5-6, mujeres y hombres respectivamente. 
+
+
+
+### BMI
+
+```{r}
+c2 <-data %>% ggplot(aes(y=Weight,x=BMI))+ geom_point(aes(colour=Sex),alpha=0.3) + stat_density_2d(geom = "raster",aes(fill = after_stat(density)),contour = FALSE) + 
+  scale_fill_viridis_c(option = "magma")+theme_light()+theme(axis.title.x=element_blank()) + ggtitle("BMI") +
+  scale_colour_manual(values = c("#3B0F70FF" ,"#FCFDBFFF" ))
+ggplotly(c2)
+
+```
+
+
+En el caso de BMI vemos una mayor dispersión de los datos  aunque se sigue la concentración alrededor de 20 y 25 de BMI
+
+
+### HGB
+
+```{r}
+
+c3 <-data %>% ggplot(aes(y=Weight,x=HGB))+ geom_point(aes(colour=Sex),alpha=0.3) + 
+  stat_density_2d(geom = "raster",aes(fill = after_stat(density)),contour = FALSE) + 
+  scale_fill_viridis_c(option = "magma")+theme_light()+theme(axis.title.x=element_blank()) + 
+  ggtitle("HGB") +
+  scale_colour_manual(values = c("#3B0F70FF" ,"#FCFDBFFF" ))
+ggplotly(c3) 
+```
+
+
+
+## Correlación{.tabset}
+
+
+### Coeficiente
+
+```{r}
+d_cor <- data %>% select(RBC,BMI,HGB)
+cor(d_cor)
+
+
+```
+
+Observando la correlación de las variables encontramos que HGB y RBC tienen un relación positiva. BMI y RBC no están correlacionadas entre ellas y lo mismo con BMI y HGB.
+
+
+### Spearman
+
+```{r}
+cor(d_cor, method = "spearman")
+
+```
+Usando el método de sperman se observa que los resultados no cambiaron mucho y se mantiene el comportamiento.
+
+### Kendall
+```{r}
+cor(d_cor, method = "kendall")
+```
+En el caso del método Kendal observamos una disminución en laa correlaciones.
+
+
+
+## Nuevas Bases{.tabset}
+
+### Mujeres
+
+```{r}
+Mujeres <- data %>% filter(Sex=='F') %>% group_by(Sport) %>% 
+  summarise(Height=mean(Height), 
+            Weight =mean(Weight),
+            RBC = mean(RBC),
+            BMI = mean(BMI),
+            HGB = mean(HGB))
+head(Mujeres)
+```
+
+
+
+### Hombres
+
+```{r}
+Hombres <- data %>% filter(Sex=='M') %>% group_by(Sport) %>% 
+      summarise(Height=mean(Height), 
+                Weight =mean(Weight),
+                RBC = mean(RBC),
+                BMI = mean(BMI),
+                HGB = mean(HGB))
+
+head(Hombres)
+```
+
+
+
+## Componentes
+
+### Mujeres
+
+Dado que tenemos una propoción acumulada de 0.883 con dos componentes decidiremos que ocuparemos solamente dos.
+El primer componente está conformado por Weight, Height y BMI. De igual manera el segundo componente está formado por Weight, Height y HGB.
+En la gráfica de codo nos encontramos con que el codo está más marcado en el tercer componente.
+Observando la biplot vemos que las variables se dirigen a la izquierda, HGB y RGC toman direcciones muy similares.
+
+```{r}
+pc_m <-Mujeres %>% select_if(is.numeric) %>%  prcomp(scale=T, center = TRUE)
+summary(pc_m)
+pc_m$rotation
+screeplot(pc_m,type="l")
+biplot(pc_m)
+```
+
+
+### Hombres
+
+
+En el caso de los hombres vemos que en el segundo componente tenemos una proporcion de 0.93, por lo que de igual manera tomaremos dos componentes.
+
+*  El primer componente se forma por Height, RBC y HGB.
+*  El segundo componente se forma por Height, Weight y BMI.
+
+De igual manera el gráfico de codo nos dice que tomemos el tercer componente pero consideramos que los dos primeros son suficientes.
+En el Biplot observamos que las variables toman la dirección opuesta con respecto a la tabla de muejeres, aunque vemos la misma agrupación, HGB con RBC y Height con Weigth  y BMI.
+
+
+
+```{r}
+pc_h <-Hombres %>% select_if(is.numeric) %>%  prcomp(scale=T, center = TRUE)
+summary(pc_h)
+pc_h$rotation
+screeplot(pc_h,type="l")
+biplot(pc_h)
+
+```
+
+
+## Cluster
+
+
+### Mujeres
+
+
+
+
+```{r}
+
+Muj <- as.data.frame(Mujeres[,2:6])
+row.names(Muj) <- t(as.vector(Mujeres[,1]))
+
+
+Muj <- Muj %>%  scale()
+
+
+
+
+km_m1 <- Muj %>% kmeans(1)
+km_m2 <- Muj %>% kmeans(2)
+km_m3 <- Muj %>% kmeans(3)
+km_m4 <- Muj %>% kmeans(4)
+km_m5 <- Muj %>% kmeans(5)
+
+km_m5$cluster
+
+c(km_m1$tot.withinss,km_m1$betweenss,km_m1$totss)
+c(km_m2$tot.withinss,km_m2$betweenss,km_m2$totss)
+c(km_m3$tot.withinss,km_m3$betweenss,km_m3$totss)
+c(km_m4$tot.withinss,km_m4$betweenss,km_m4$totss)
+c(km_m5$tot.withinss,km_m5$betweenss,km_m5$totss)
+
+var.exp <- data.frame(k = c(1:5),
+                      bss_tss = c(km_m1$betweenss/km_m1$totss,
+                                  km_m2$betweenss/km_m2$totss,
+                                  km_m3$betweenss/km_m3$totss,
+                                  km_m4$betweenss/km_m4$totss,
+                                  km_m5$betweenss/km_m5$totss))
+ggplot(data = var.exp, aes(x = k, y = bss_tss)) + 
+  geom_point() + 
+  geom_line() +
+  ggtitle("Elbow plot")
+
+
+km_m4
+
+
+
+clust.visual<-data.frame(pc_m$x[,1:2],as.factor(km_m4$cluster))
+names(clust.visual)<-c("PC1","PC2","grupo")
+clust.visual
+
+
+
+ggplot(data=clust.visual,aes(x=PC1,y=PC2,col=grupo))+geom_point()
+
+
+```
+
+
+
+### Hombres
+
+```{r}
+
+
+Hom <- as.data.frame(Hombres[,2:6])
+row.names(Hom) <- t(as.vector(Hombres[,1]))
+
+
+Hom <- Hom %>%  scale()
+
+
+
+
+km_h1 <- Hom %>% kmeans(1)
+km_h2 <- Hom %>% kmeans(2)
+km_h3 <- Hom %>% kmeans(3)
+km_h4 <- Hom %>% kmeans(4)
+km_h5 <- Hom %>% kmeans(5)
+
+
+
+c(km_h1$tot.withinss,km_h1$betweenss,km_h1$totss)
+c(km_h2$tot.withinss,km_h2$betweenss,km_h2$totss)
+c(km_h3$tot.withinss,km_h3$betweenss,km_h3$totss)
+c(km_h4$tot.withinss,km_h4$betweenss,km_h4$totss)
+c(km_h5$tot.withinss,km_h5$betweenss,km_h5$totss)
+
+var.exp_h <- data.frame(k = c(1:5),
+                      bss_tss = c(km_h1$betweenss/km_h1$totss,
+                                  km_h2$betweenss/km_h2$totss,
+                                  km_h3$betweenss/km_h3$totss,
+                                  km_h4$betweenss/km_h4$totss,
+                                  km_h5$betweenss/km_h5$totss))
+ggplot(data = var.exp_h, aes(x = k, y = bss_tss)) + 
+  geom_point() + 
+  geom_line() +
+  ggtitle("Elbow plot")
+
+
+
+km_h3
+
+
+clust.visual<-data.frame(pc_h$x[,1:2],as.factor(km_h3$cluster))
+names(clust.visual)<-c("PC1","PC2","grupo")
+clust.visual
+
+
+
+ggplot(data=clust.visual,aes(x=PC1,y=PC2,col=grupo))+geom_point()
+
+
+```
+
